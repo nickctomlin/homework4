@@ -101,8 +101,20 @@ class CLIP(nn.Module):
         super().__init__()
         self.vision_encoder = vision_encoder
         self.text_encoder = text_encoder
-        # TODO: implement the rest components
-        raise NotImplementedError("Not implemented")
+        self.temperature = temperature
+
+        # Get the hidden dimensions from encoders
+        # Vision encoder output dimension
+        vision_hidden_size = vision_encoder.config.hidden_size
+        # Text encoder output dimension
+        text_hidden_size = text_encoder.config.hidden_size
+
+        # Projection heads to map to shared embedding space
+        self.vision_proj = nn.Linear(vision_hidden_size, proj_dim)
+        self.text_proj = nn.Linear(text_hidden_size, proj_dim)
+
+        # Learnable temperature parameter
+        self.logit_scale = nn.Parameter(torch.ones([]) * torch.log(torch.tensor(1.0 / temperature)))
 
     def encode_image(self, image: torch.Tensor) -> torch.Tensor:
         return self.vision_encoder(image)
@@ -178,9 +190,41 @@ class CLIP(nn.Module):
             (NOTE: you don't need to use the variable `labels`, this is just for compatibility with the Trainer class)
             (Hint: refer to returned values of the __getitem__ method in the CaptionDatasetForTraining class)
         Returns:
-            TODO: think about the what values should be returned
+            Tuple of (vision_features, text_features, logit_scale)
         """
-        raise NotImplementedError("Not implemented")
+        # Encode images: vision_encoder returns last_hidden_state
+        vision_outputs = self.vision_encoder(pixel_values)
+        # Get the pooled output (CLS token or mean pooling)
+        if hasattr(vision_outputs, "pooler_output") and vision_outputs.pooler_output is not None:
+            vision_features = vision_outputs.pooler_output
+        else:
+            # Use mean pooling over spatial dimensions
+            vision_features = vision_outputs.last_hidden_state.mean(dim=1)
+
+        # Encode text
+        text_outputs = self.text_encoder(input_ids=input_ids, attention_mask=attention_mask)
+        # Get the pooled output - use last hidden state with mean pooling
+        if attention_mask is not None:
+            # Masked mean pooling
+            mask_expanded = attention_mask.unsqueeze(-1).expand(text_outputs.last_hidden_state.size()).float()
+            sum_embeddings = torch.sum(text_outputs.last_hidden_state * mask_expanded, dim=1)
+            sum_mask = torch.clamp(mask_expanded.sum(dim=1), min=1e-9)
+            text_features = sum_embeddings / sum_mask
+        else:
+            text_features = text_outputs.last_hidden_state.mean(dim=1)
+
+        # Project to shared embedding space
+        vision_features = self.vision_proj(vision_features)
+        text_features = self.text_proj(text_features)
+
+        # L2 normalize
+        vision_features = vision_features / vision_features.norm(dim=-1, keepdim=True)
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+
+        # Return features and logit scale
+        logit_scale = self.logit_scale.exp()
+
+        return vision_features, text_features, logit_scale
 
 
 def compute_clip_loss(
@@ -199,7 +243,25 @@ def compute_clip_loss(
     Returns:
         The loss for the CLIP model.
     """
-    raise NotImplementedError("Not implemented")
+    vision_features, text_features, logit_scale = outputs
+
+    # Compute similarity matrix
+    # logits_per_image[i, j] = similarity between image i and text j
+    logits_per_image = logit_scale * vision_features @ text_features.T
+    logits_per_text = logits_per_image.T
+
+    # Create ground truth labels (diagonal should be the matching pairs)
+    batch_size = vision_features.shape[0]
+    ground_truth = torch.arange(batch_size, device=vision_features.device)
+
+    # Symmetric cross-entropy loss (InfoNCE)
+    loss_image = nn.functional.cross_entropy(logits_per_image, ground_truth)
+    loss_text = nn.functional.cross_entropy(logits_per_text, ground_truth)
+
+    # Average the two losses
+    loss = (loss_image + loss_text) / 2
+
+    return loss
 
 
 def get_target_modules_for_lora(model: nn.Module) -> list[str]:
