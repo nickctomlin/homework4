@@ -18,7 +18,7 @@ processor = AutoProcessor.from_pretrained("HuggingFaceTB/SmolVLM-256M-Instruct")
 device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
 
-def load(model_name: str = "clip_model"):
+def load_clip(model_name: str = "clip"):
     from pathlib import Path
 
     from peft import PeftModel
@@ -37,6 +37,10 @@ def load(model_name: str = "clip_model"):
         clip = clip.to(dtype=torch.bfloat16)
 
     return clip
+
+
+# Alias for backwards compatibility
+load = load_clip
 
 
 def clip_data_collator(features: list[dict[str, torch.Tensor]]) -> dict[str, torch.Tensor]:
@@ -213,9 +217,10 @@ class CLIP(nn.Module):
         else:
             text_features = text_outputs.last_hidden_state.mean(dim=1)
 
-        # Project to shared embedding space
-        vision_features = self.vision_proj(vision_features)
-        text_features = self.text_proj(text_features)
+        # Project to shared embedding space (ensure consistent dtype)
+        proj_dtype = self.vision_proj.weight.dtype
+        vision_features = self.vision_proj(vision_features.to(proj_dtype))
+        text_features = self.text_proj(text_features.to(proj_dtype))
 
         # L2 normalize
         vision_features = vision_features / vision_features.norm(dim=-1, keepdim=True)
@@ -281,7 +286,7 @@ def get_target_modules_for_lora(model: nn.Module) -> list[str]:
 def train(
     data_dir: Path | None = None,
     output_dir: str = "clip",
-    num_train_epochs: float = 0.15,  # ~15% of dataset, same as VLM
+    num_train_epochs: float = 0.5,  # ~50% of dataset for better accuracy
     per_device_train_batch_size: int = 128,  # Reduced for memory, still good for contrastive
     gradient_accumulation_steps: int = 4,  # Effective batch = 512
     learning_rate: float = 3e-4,

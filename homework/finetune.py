@@ -16,7 +16,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is
 processor = AutoProcessor.from_pretrained("HuggingFaceTB/SmolVLM-256M-Instruct")
 
 
-def load(model_name: str = "vlm_model") -> BaseVLM:
+def load_vlm(model_name: str = "vlm_sft") -> BaseVLM:
     from pathlib import Path
 
     from peft import PeftModel
@@ -28,6 +28,10 @@ def load(model_name: str = "vlm_model") -> BaseVLM:
     vlm.model.eval()
 
     return vlm
+
+
+# Alias for backwards compatibility
+load = load_vlm
 
 
 def custom_data_collator(features: list[dict[str, torch.Tensor]]) -> dict[str, torch.Tensor]:
@@ -111,7 +115,7 @@ def train(
     data_dir: Path | None = None,
     train_dataset_name: str = "train",
     output_dir: str = "vlm_sft",
-    num_train_epochs: float = 0.15,  # ~15% of dataset, reasonable training time
+    num_train_epochs: float = 0.5,  # ~50% of dataset for better accuracy
     per_device_train_batch_size: int = 16,  # Larger batch for faster training
     gradient_accumulation_steps: int = 2,
     learning_rate: float = 3e-4,
