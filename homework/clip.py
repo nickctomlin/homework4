@@ -281,10 +281,10 @@ def get_target_modules_for_lora(model: nn.Module) -> list[str]:
 def train(
     data_dir: Path | None = None,
     output_dir: str = "clip",
-    num_train_epochs: float = 0.05,  # for debugging purpose, increase this once the dry run works
-    per_device_train_batch_size: int = 1024,
-    gradient_accumulation_steps: int = 1,
-    learning_rate: float = 5e-4,
+    num_train_epochs: float = 3.0,  # Increased from 0.05 to 3 full epochs
+    per_device_train_batch_size: int = 256,  # Reduced for memory, still large for contrastive learning
+    gradient_accumulation_steps: int = 4,  # Effective batch size = 1024
+    learning_rate: float = 1e-4,  # Lower learning rate for stability
     num_workers: int = 16,
 ):
     vlm = BaseVLM()
