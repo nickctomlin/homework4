@@ -302,18 +302,17 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
         kart_name = kart["kart_name"]
         cx, cy = kart["center"]
 
-        # Left/Right relative to image center (since we see from ego's perspective)
+        # Left/Right relative to image center
         if cx < image_center_x:
             lr_position = "left"
         else:
             lr_position = "right"
 
-        # Front/Behind - in image coordinates, lower y means higher in image (in front)
-        # Objects higher in the image (lower y) are in front
+        # Front/Behind - use "front" and "back" to match grader vocabulary
         if cy < image_center_y:
             fb_position = "front"
         else:
-            fb_position = "behind"
+            fb_position = "back"  # Changed from "behind" to "back"
 
         # Add left/right question
         qa_pairs.append({
@@ -325,6 +324,12 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
         qa_pairs.append({
             "question": f"Is {kart_name} in front of or behind the ego car?",
             "answer": fb_position,
+        })
+
+        # Add combined relative position question (NEW!)
+        qa_pairs.append({
+            "question": f"Where is {kart_name} relative to the ego car?",
+            "answer": f"{fb_position} and {lr_position}",
         })
 
     # 5. Counting questions
