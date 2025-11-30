@@ -115,7 +115,7 @@ def train(
     data_dir: Path | None = None,
     train_dataset_name: str = "train",
     output_dir: str = "vlm_sft",
-    num_train_epochs: float = 0.5,  # ~50% of dataset for better accuracy
+    num_train_epochs: float = 1.0,  # Full epoch for maximum accuracy
     per_device_train_batch_size: int = 16,  # Larger batch for faster training
     gradient_accumulation_steps: int = 2,
     learning_rate: float = 3e-4,

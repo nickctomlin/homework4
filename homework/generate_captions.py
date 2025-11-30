@@ -54,13 +54,13 @@ def generate_caption(info_path: str, view_index: int, img_width: int = 150, img_
 
         # Front/Behind - lower y = higher in image = in front
         if cy < image_center_y:
-            fb_position = "in front"
+            fb_position = "in front of"  # "in front of the ego car"
         else:
-            fb_position = "behind"
+            fb_position = "behind"  # "behind the ego car" (no "of")
 
         # Add position caption
         captions.append(f"{kart_name} is {lr_position} of the ego car.")
-        captions.append(f"{kart_name} is {fb_position} of the ego car.")
+        captions.append(f"{kart_name} is {fb_position} the ego car.")
 
     return captions
 

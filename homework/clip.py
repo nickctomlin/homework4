@@ -286,7 +286,7 @@ def get_target_modules_for_lora(model: nn.Module) -> list[str]:
 def train(
     data_dir: Path | None = None,
     output_dir: str = "clip",
-    num_train_epochs: float = 0.5,  # ~50% of dataset for better accuracy
+    num_train_epochs: float = 1.0,  # Full epoch for maximum accuracy
     per_device_train_batch_size: int = 128,  # Reduced for memory, still good for contrastive
     gradient_accumulation_steps: int = 4,  # Effective batch = 512
     learning_rate: float = 3e-4,
