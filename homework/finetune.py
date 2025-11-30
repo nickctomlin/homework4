@@ -111,13 +111,13 @@ def train(
     data_dir: Path | None = None,
     train_dataset_name: str = "train",
     output_dir: str = "vlm_sft",
-    num_train_epochs: float = 2.0,  # Increased from 0.05 to 2 full epochs
-    per_device_train_batch_size: int = 8,
-    gradient_accumulation_steps: int = 4,
-    learning_rate: float = 2e-4,  # Slightly lower for stability
-    lora_r: int = 16,  # Increased LoRA rank for more capacity
+    num_train_epochs: float = 0.15,  # ~15% of dataset, reasonable training time
+    per_device_train_batch_size: int = 16,  # Larger batch for faster training
+    gradient_accumulation_steps: int = 2,
+    learning_rate: float = 3e-4,
+    lora_r: int = 16,
     lora_alpha: int = 32,
-    lora_dropout: float = 0.05,  # Small dropout for regularization
+    lora_dropout: float = 0.05,
     num_workers: int = 16,
 ):
     """
