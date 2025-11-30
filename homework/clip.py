@@ -358,6 +358,18 @@ def train(
 
     writer.close()
 
+    print("\n" + "=" * 60)
+    print("CLIP MODEL SAVED!")
+    print("=" * 60)
+    print(f"Checkpoint location: {output_dir.resolve()}")
+    print(f"Files saved:")
+    print(f"  - {output_dir.resolve() / 'adapter_config.json'}")
+    print(f"  - {output_dir.resolve() / 'adapter_model.safetensors'}")
+    print(f"  - {output_dir.resolve() / 'additional_weights.pt'}")
+    print("=" * 60)
+    print(f"\nTo test: python -m homework.clip test {output_dir.name}")
+    print("=" * 60 + "\n")
+
     return model, processor
 
 
