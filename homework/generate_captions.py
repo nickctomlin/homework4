@@ -143,7 +143,6 @@ def generate_all_captions(
         json.dump(all_captions, f, indent=2)
 
     print(f"Saved captions to {output_file}")
-    print(f"\nNOTE: Make sure to copy/symlink images from '{data_dir}' to 'data/{image_prefix}/' before training.")
 
 
 """

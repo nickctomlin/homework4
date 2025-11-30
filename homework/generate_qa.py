@@ -448,7 +448,6 @@ def generate_all_qa_pairs(
         json.dump(all_qa_pairs, f, indent=2)
 
     print(f"Saved QA pairs to {output_file}")
-    print(f"\nNOTE: Make sure to copy/symlink images from '{data_dir}' to 'data/{image_prefix}/' before training.")
 
 
 """

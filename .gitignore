@@ -1,2 +1,6 @@
 supertux_data/
 supertux_data.zip
+data/
+homework/clip/
+homework/vlm_sft/
+homework/__pycache__/

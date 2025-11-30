@@ -281,10 +281,13 @@ def get_target_modules_for_lora(model: nn.Module) -> list[str]:
 def train(
     data_dir: Path | None = None,
     output_dir: str = "clip",
-    num_train_epochs: float = 0.15,  # ~15% of dataset, reasonable training time
-    per_device_train_batch_size: int = 512,  # Large batch for contrastive learning
-    gradient_accumulation_steps: int = 2,
+    num_train_epochs: float = 0.15,  # ~15% of dataset, same as VLM
+    per_device_train_batch_size: int = 128,  # Reduced for memory, still good for contrastive
+    gradient_accumulation_steps: int = 4,  # Effective batch = 512
     learning_rate: float = 3e-4,
+    lora_r: int = 16,  # Same as VLM
+    lora_alpha: int = 32,  # Same as VLM
+    lora_dropout: float = 0.05,  # Same as VLM
     num_workers: int = 16,
 ):
     vlm = BaseVLM()
@@ -306,10 +309,9 @@ def train(
     peft_config = LoraConfig(
         task_type=TaskType.FEATURE_EXTRACTION,
         inference_mode=False,
-        r=8,
-        lora_alpha=32,
-        lora_dropout=0.0,
-        # target_modules="all-linear",
+        r=lora_r,
+        lora_alpha=lora_alpha,
+        lora_dropout=lora_dropout,
         target_modules=get_target_modules_for_lora(model),
         bias="none",
     )
