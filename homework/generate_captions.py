@@ -19,10 +19,10 @@ def generate_caption(info_path: str, view_index: int, img_width: int = 150, img_
     kart_objects = extract_kart_objects(info_path, view_index, img_width, img_height)
     track_name = extract_track_info(info_path)
 
-    # Get ego kart name from info file (ego is always track_id 0)
+    # Get ego kart name from info file (ego is the kart whose perspective we're viewing)
     with open(info_path) as f:
         info = json.load(f)
-    ego_kart_name = info["karts"][0]  # track_id 0 is always ego
+    ego_kart_name = info["karts"][view_index]  # ego is karts[view_index] for this view
 
     # Find other karts
     other_karts = [k for k in kart_objects if not k["is_ego"]]
