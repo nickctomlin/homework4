@@ -260,29 +260,31 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
     kart_objects = extract_kart_objects(info_path, view_index, img_width, img_height)
     track_name = extract_track_info(info_path)
 
-    # Find the ego car
+    # Find the ego car (centermost kart in the image)
     ego_kart = None
     other_karts = []
     for kart in kart_objects:
-        if kart["is_ego"]:
+        if kart["is_center_kart"]:
             ego_kart = kart
         else:
             other_karts.append(kart)
 
-    # Get ego kart name from info file (ego is the kart whose perspective we're viewing)
-    with open(info_path) as f:
-        info = json.load(f)
-    ego_kart_name = info["karts"][view_index]  # ego is karts[view_index] for this view
+    # Get ego kart name from the centermost kart
+    if ego_kart is not None:
+        ego_kart_name = ego_kart["kart_name"]
+    else:
+        ego_kart_name = None  # No karts visible
 
     # Image center for relative position calculations
     image_center_x = img_width / 2
     image_center_y = img_height / 2
 
-    # 1. Ego car question - always ask (ego is karts[view_index] regardless of visibility)
-    qa_pairs.append({
-        "question": "What kart is the ego car?",
-        "answer": ego_kart_name,
-    })
+    # 1. Ego car question - only ask if there are visible karts
+    if ego_kart_name is not None:
+        qa_pairs.append({
+            "question": "What kart is the ego car?",
+            "answer": ego_kart_name,
+        })
 
     # 2. Total karts question - count visible karts
     num_visible_karts = len(kart_objects)

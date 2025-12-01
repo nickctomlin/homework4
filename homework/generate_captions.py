@@ -19,20 +19,25 @@ def generate_caption(info_path: str, view_index: int, img_width: int = 150, img_
     kart_objects = extract_kart_objects(info_path, view_index, img_width, img_height)
     track_name = extract_track_info(info_path)
 
-    # Get ego kart name from info file (ego is the kart whose perspective we're viewing)
-    with open(info_path) as f:
-        info = json.load(f)
-    ego_kart_name = info["karts"][view_index]  # ego is karts[view_index] for this view
+    # Find the ego car (centermost kart in the image)
+    ego_kart = None
+    other_karts = []
+    for kart in kart_objects:
+        if kart["is_center_kart"]:
+            ego_kart = kart
+        else:
+            other_karts.append(kart)
 
-    # Find other karts
-    other_karts = [k for k in kart_objects if not k["is_ego"]]
+    # Get ego kart name from the centermost kart
+    ego_kart_name = ego_kart["kart_name"] if ego_kart else None
 
     # Image center for relative position calculations
     image_center_x = img_width / 2
     image_center_y = img_height / 2
 
-    # 1. Ego car caption
-    captions.append(f"{ego_kart_name} is the ego car.")
+    # 1. Ego car caption (only if there are visible karts)
+    if ego_kart_name is not None:
+        captions.append(f"{ego_kart_name} is the ego car.")
 
     # 2. Counting caption
     num_visible_karts = len(kart_objects)
