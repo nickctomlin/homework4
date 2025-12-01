@@ -278,11 +278,12 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
     image_center_x = img_width / 2
     image_center_y = img_height / 2
 
-    # 1. Ego car question
-    qa_pairs.append({
-        "question": "What kart is the ego car?",
-        "answer": ego_kart_name,
-    })
+    # 1. Ego car question - ONLY if ego is visible in this view
+    if ego_kart is not None:
+        qa_pairs.append({
+            "question": "What kart is the ego car?",
+            "answer": ego_kart_name,
+        })
 
     # 2. Total karts question - count visible karts
     num_visible_karts = len(kart_objects)
