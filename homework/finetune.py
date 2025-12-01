@@ -123,13 +123,14 @@ def train(
     lora_alpha: int = 32,
     lora_dropout: float = 0.05,
     num_workers: int = 16,
+    resume_from_checkpoint: str | None = None,
 ):
     """
     Fine-tune a VLM model using LoRA.
 
     Args:
-        model_name: Name of the base model to fine-tune
         data_dir: Directory containing the dataset
+        train_dataset_name: Name of the training dataset split
         output_dir: Directory to save the fine-tuned model
         num_train_epochs: Number of training epochs
         per_device_train_batch_size: Batch size per device
@@ -138,6 +139,8 @@ def train(
         lora_r: LoRA rank
         lora_alpha: LoRA alpha
         lora_dropout: LoRA dropout
+        num_workers: Number of data loader workers
+        resume_from_checkpoint: Path to checkpoint to resume from (e.g., 'vlm_sft/checkpoint-500')
     """
     vlm = BaseVLM()
 
@@ -207,7 +210,7 @@ def train(
     )
 
     # Train the model
-    trainer.train()
+    trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
     # Save the model
     trainer.save_model(output_dir)
