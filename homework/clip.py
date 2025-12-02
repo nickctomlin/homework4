@@ -116,9 +116,16 @@ class CLIP(nn.Module):
         # Projection heads to map to shared embedding space
         self.vision_proj = nn.Linear(vision_hidden_size, proj_dim)
         self.text_proj = nn.Linear(text_hidden_size, proj_dim)
+        
+        # Initialize projection layers with small weights for stability
+        nn.init.normal_(self.vision_proj.weight, std=0.01)
+        nn.init.normal_(self.text_proj.weight, std=0.01)
+        nn.init.zeros_(self.vision_proj.bias)
+        nn.init.zeros_(self.text_proj.bias)
 
-        # Learnable temperature parameter
-        self.logit_scale = nn.Parameter(torch.ones([]) * torch.log(torch.tensor(1.0 / temperature)))
+        # Learnable temperature parameter (start conservative, let it learn)
+        # Initial value = log(1.0) = 0, so exp gives scale of 1.0
+        self.logit_scale = nn.Parameter(torch.zeros([]))
 
     def encode_image(self, image: torch.Tensor) -> torch.Tensor:
         return self.vision_encoder(image)
