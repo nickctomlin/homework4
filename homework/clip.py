@@ -226,8 +226,8 @@ class CLIP(nn.Module):
         vision_features = vision_features / vision_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
-        # Return features and logit scale
-        logit_scale = self.logit_scale.exp()
+        # Return features and logit scale (clamped to prevent explosion)
+        logit_scale = self.logit_scale.exp().clamp(max=100.0)
 
         return vision_features, text_features, logit_scale
 
@@ -289,7 +289,7 @@ def train(
     num_train_epochs: float = 1.0,  # Full epoch for maximum accuracy
     per_device_train_batch_size: int = 128,  # Reduced for memory, still good for contrastive
     gradient_accumulation_steps: int = 4,  # Effective batch = 512
-    learning_rate: float = 3e-4,
+    learning_rate: float = 1e-4,  # Reduced for stability
     lora_r: int = 16,  # Same as VLM
     lora_alpha: int = 32,  # Same as VLM
     lora_dropout: float = 0.05,  # Same as VLM
@@ -347,6 +347,8 @@ def train(
         save_total_limit=2,
         label_names=["labels"],
         dataloader_num_workers=num_workers,
+        max_grad_norm=1.0,  # Gradient clipping for stability
+        warmup_ratio=0.1,  # Warmup to prevent early instability
     )
 
     trainer = Trainer(

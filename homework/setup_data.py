@@ -57,7 +57,10 @@ def setup_training_data(
 
     # Step 2: Generate QA pairs
     print("\nGenerating QA pairs...")
-    from .generate_qa import generate_all_qa_pairs
+    try:
+        from .generate_qa import generate_all_qa_pairs
+    except ImportError:
+        from homework.generate_qa import generate_all_qa_pairs
 
     generate_all_qa_pairs(
         data_dir=str(target_path),
@@ -67,7 +70,10 @@ def setup_training_data(
 
     # Step 3: Generate captions
     print("\nGenerating captions...")
-    from .generate_captions import generate_all_captions
+    try:
+        from .generate_captions import generate_all_captions
+    except ImportError:
+        from homework.generate_captions import generate_all_captions
 
     generate_all_captions(
         data_dir=str(target_path),
